@@ -13,6 +13,9 @@ Now you can collect data using the core twarc utility:
 
 And you have a new subcommand `hashtags`:
 
-    twarc2 hashtags tweets.jsonl 
+    twarc2 hashtags tweets.jsonl hashtags.csv
+
+Then you can open `hashtags.csv` in your favourite spreadsheet program or
+DataFrame library.
 
 [twarc]: https://github.com/docnow/twarc
