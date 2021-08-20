@@ -4,6 +4,7 @@ import sqlite3
 
 from pathlib import Path
 from twarc.expansions import ensure_flattened
+from twarc.decorators2 import FileSizeProgressBar
 
 @click.command()
 @click.option(
@@ -43,36 +44,39 @@ def hashtags(group, db_path, limit, skip_import, infile, outfile):
     if not skip_import:
         db.execute("DROP TABLE IF EXISTS hashtags")
         db.execute("CREATE TABLE hashtags (id text, created timestamp, hashtag text)")
-        load(infile, db)
+        load(infile, outfile, db)
 
     export(outfile, db, group, limit)
 
 
-def load(infile, db):
-    for line in infile:
-        line = line.strip()
+def load(infile, outfile, db):
 
-        # ignore empty lines
-        if not line:
-            continue
+    with FileSizeProgressBar(infile, outfile) as progress: 
+        for line in infile:
+            progress.update(len(line))
 
-        data = json.loads(line)
-        for tweet in ensure_flattened(data):
-            if "entities" in tweet and "hashtags" in tweet["entities"]:
-                for hashtag in tweet["entities"]["hashtags"]:
-                    db.execute(
-                        """
-                        INSERT INTO hashtags (id, created, hashtag)
-                        VALUES (?, ?, ?)
-                        """,
-                        (
-                            tweet["id"],
-                            tweet["created_at"],
-                            hashtag["tag"].lower()
+            # ignore empty lines
+            line = line.strip()
+            if not line:
+                continue
+
+            data = json.loads(line)
+            for tweet in ensure_flattened(data):
+                if "entities" in tweet and "hashtags" in tweet["entities"]:
+                    for hashtag in tweet["entities"]["hashtags"]:
+                        db.execute(
+                            """
+                            INSERT INTO hashtags (id, created, hashtag)
+                            VALUES (?, ?, ?)
+                            """,
+                            (
+                                tweet["id"],
+                                tweet["created_at"],
+                                hashtag["tag"].lower()
+                            )
                         )
-                    )
-        
-        db.commit()
+            
+            db.commit()
 
 
 def export(outfile, db, group, limit):
