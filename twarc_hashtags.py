@@ -31,7 +31,11 @@ def hashtags(infile, outfile):
                         INSERT INTO hashtags (id, created, hashtag)
                         VALUES (?, ?, ?)
                         ''',
-                        (tweet['id'], tweet['created_at'], hashtag['tag'])
+                        (
+                            tweet['id'],
+                            tweet['created_at'],
+                            hashtag['tag'].lower()
+                        )
                     )
         
         db.commit()
