@@ -41,3 +41,12 @@ banliznowjack,230
 btc,113
 farmersprotest,111
 '''
+
+def test_retweets():
+    result = runner.invoke(hashtags, ['test-data/tweets3.jsonl'])
+    assert result.exit_code == 0
+    assert result.output.startswith(
+'''hashtag,tweets
+endsars,2
+freeimoleayo,2
+''')
