@@ -6,32 +6,29 @@ from pathlib import Path
 from twarc.expansions import ensure_flattened
 from twarc.decorators2 import FileSizeProgressBar
 
+
 @click.command()
 @click.option(
-    "--group", 
+    "--group",
     "-g",
     type=click.Choice(["day", "week", "month", "year"]),
-    help="Group hashtag results by time"
+    help="Group hashtag results by time",
 )
 @click.option(
     "--db",
     "-d",
     "db_path",
     default="hashtags.db",
-    help="Path to use for the SQLite database"
+    help="Path to use for the SQLite database",
 )
 @click.option(
     "--skip-import",
     "-s",
     is_flag=True,
-    help="Skip loading the tweets and use existing SQLite database"
+    help="Skip loading the tweets and use existing SQLite database",
 )
 @click.option(
-    "--limit",
-    "-l",
-    type=int,
-    default=0,
-    help="Limit output to this many hashtags"
+    "--limit", "-l", type=int, default=0, help="Limit output to this many hashtags"
 )
 @click.argument("infile", type=click.File("r"), default="-")
 @click.argument("outfile", type=click.File("w"), default="-")
@@ -51,7 +48,7 @@ def hashtags(group, db_path, limit, skip_import, infile, outfile):
 
 def load(infile, outfile, db):
 
-    with FileSizeProgressBar(infile, outfile) as progress: 
+    with FileSizeProgressBar(infile, outfile) as progress:
         for line in infile:
             progress.update(len(line))
 
@@ -64,18 +61,31 @@ def load(infile, outfile, db):
             for tweet in ensure_flattened(data):
                 # Process Retweets:
                 if "referenced_tweets" in tweet:
-                    rts = [t for t in tweet["referenced_tweets"] if t["type"] == "retweeted"]
+                    rts = [
+                        t
+                        for t in tweet["referenced_tweets"]
+                        if t["type"] == "retweeted"
+                    ]
                     retweeted_tweet = rts[-1] if rts else None
                     # If it's a native retweet, replace the "RT @user Text" with the original text, metrics, and entities, but keep the Author.
                     if retweeted_tweet:
                         # A retweet inherits everything from retweeted tweet.
-                        tweet["text"] = retweeted_tweet.pop("text", tweet.pop("text", None))
-                        tweet["entities"] = retweeted_tweet.pop("entities", tweet.pop("entities", None))
-                        tweet["attachments"] = retweeted_tweet.pop("attachments", tweet.pop("attachments", None))
-                        tweet["context_annotations"] = retweeted_tweet.pop(
-                            "context_annotations", tweet.pop("context_annotations", None)
+                        tweet["text"] = retweeted_tweet.pop(
+                            "text", tweet.pop("text", None)
                         )
-                        tweet["public_metrics"] = retweeted_tweet.pop("public_metrics", tweet.pop("public_metrics", None))
+                        tweet["entities"] = retweeted_tweet.pop(
+                            "entities", tweet.pop("entities", None)
+                        )
+                        tweet["attachments"] = retweeted_tweet.pop(
+                            "attachments", tweet.pop("attachments", None)
+                        )
+                        tweet["context_annotations"] = retweeted_tweet.pop(
+                            "context_annotations",
+                            tweet.pop("context_annotations", None),
+                        )
+                        tweet["public_metrics"] = retweeted_tweet.pop(
+                            "public_metrics", tweet.pop("public_metrics", None)
+                        )
                 if "entities" in tweet and "hashtags" in tweet["entities"]:
                     for hashtag in tweet["entities"]["hashtags"]:
                         db.execute(
@@ -83,13 +93,9 @@ def load(infile, outfile, db):
                             INSERT INTO hashtags (id, created, hashtag)
                             VALUES (?, ?, ?)
                             """,
-                            (
-                                tweet["id"],
-                                tweet["created_at"],
-                                hashtag["tag"].lower()
-                            )
+                            (tweet["id"], tweet["created_at"], hashtag["tag"].lower()),
                         )
-            
+
             db.commit()
 
 
@@ -111,8 +117,7 @@ def export(outfile, db, group, limit):
         elif group == "year":
             fmt = "%Y"
 
-        sql = \
-            """
+        sql = """
             SELECT
                 hashtag,
                 STRFTIME(?, created) AS time,
@@ -126,8 +131,7 @@ def export(outfile, db, group, limit):
 
     # otherwise we're doing a global count
     else:
-        sql = \
-            """
+        sql = """
             SELECT hashtag, COUNT(*) AS tweets
             FROM HASHTAGS
             GROUP BY hashtag
