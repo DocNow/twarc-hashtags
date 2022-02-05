@@ -10,15 +10,26 @@ def test_basic():
     assert (
         result.output
         == """hashtag,tweets
+gettyimagesnews,2
 naacpimageawards,2
-usa,1
-trafficking,1
-refugees,1
-obama,1
-isis,1
-illegals,1
-cartel,1
+savetheseabirds,2
 biden,1
+boulder,1
+cartel,1
+forthepeopleact,1
+guncontrolnow,1
+illegals,1
+isis,1
+islarebelde,1
+nft,1
+niunamenos,1
+nra,1
+obama,1
+patriaomuerte,1
+refugees,1
+sethrich,1
+trafficking,1
+usa,1
 """
     )
 
@@ -28,10 +39,10 @@ def test_group():
     assert result.exit_code == 0
     assert result.output.startswith(
         """hashtag,time,tweets
+ethereum,2021-08-20,13
 bitcoin,2021-08-20,10
-reinstate45,2021-08-20,5
-hypocrisy,2021-08-20,5
 fbi,2021-08-20,5
+hypocrisy,2021-08-20,5
 """
     )
 
@@ -42,11 +53,11 @@ def test_limit():
     assert (
         result.output
         == """hashtag,tweets
-wtfhappenedin1971,389
-bitcoin,372
-banliznowjack,230
-btc,113
-farmersprotest,111
+banliznowjack,650
+wtfhappenedin1971,599
+bitcoin,469
+farmersprotest,128
+btc,121
 """
     )
 
