@@ -62,6 +62,20 @@ def load(infile, outfile, db):
 
             data = json.loads(line)
             for tweet in ensure_flattened(data):
+                # Process Retweets:
+                if "referenced_tweets" in tweet:
+                    rts = [t for t in tweet["referenced_tweets"] if t["type"] == "retweeted"]
+                    retweeted_tweet = rts[-1] if rts else None
+                    # If it's a native retweet, replace the "RT @user Text" with the original text, metrics, and entities, but keep the Author.
+                    if retweeted_tweet:
+                        # A retweet inherits everything from retweeted tweet.
+                        tweet["text"] = retweeted_tweet.pop("text", None)
+                        tweet["entities"] = retweeted_tweet.pop("entities", None)
+                        tweet["attachments"] = retweeted_tweet.pop("attachments", None)
+                        tweet["context_annotations"] = retweeted_tweet.pop(
+                            "context_annotations", None
+                        )
+                        tweet["public_metrics"] = retweeted_tweet.pop("public_metrics", None)
                 if "entities" in tweet and "hashtags" in tweet["entities"]:
                     for hashtag in tweet["entities"]["hashtags"]:
                         db.execute(
